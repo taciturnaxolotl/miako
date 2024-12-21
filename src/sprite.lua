@@ -23,9 +23,7 @@ local function new(dir)
         x = 0,
         y = 0
     }
-    local speed = 800   -- pixels per second
     local isMoving = false
-    local easing = 0.15 -- easing factor
 
     for _, frame in ipairs(file.header.frames) do
         for _, chunk in ipairs(frame.chunks) do
@@ -77,9 +75,7 @@ local function new(dir)
         time = time,
         position = position,
         targetPosition = targetPosition,
-        speed = speed,
         isMoving = isMoving,
-        easing = easing
     }, sprite)
 end
 
@@ -115,20 +111,17 @@ function sprite:update(delta)
         end
     end
 
-    -- Smooth movement towards target position with easing
-    local dx = self.targetPosition.x - self.position.x
-    local dy = self.targetPosition.y - self.position.y
-    local distance = math.sqrt(dx * dx + dy * dy)
+    -- Simple linear interpolation (lerp)
+    local speed = 25.0 -- Adjust this value to control movement speed (higher = faster)
 
-    if distance > 0.2 then
-        self.isMoving = true
-        self.position.x = self.position.x + dx * self.easing
-        self.position.y = self.position.y + dy * self.easing
-    else
-        self.isMoving = false
-        self.position.x = self.targetPosition.x
-        self.position.y = self.targetPosition.y
-    end
+    -- Move towards target
+    self.position.x = self.position.x + (self.targetPosition.x - self.position.x) * speed * delta
+    self.position.y = self.position.y + (self.targetPosition.y - self.position.y) * speed * delta
+
+    -- Check if still moving
+    local dx = math.abs(self.position.x - self.targetPosition.x)
+    local dy = math.abs(self.position.y - self.targetPosition.y)
+    self.isMoving = (dx > 0.1 or dy > 0.1)
 
     -- If not moving, switch to idle animation
     if not self.isMoving then
