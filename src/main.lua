@@ -149,7 +149,7 @@ function love.draw()
         love.graphics.setColor(1, 1, 1)
         love.graphics.circle("fill", (WindowWidth) - 12, 80, 10)
         if DebugOptions.showInfo then
-            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.setColor(0.5, 0.5, 0.5, 1)
         else
             love.graphics.setColor(0, 0, 0)
         end
