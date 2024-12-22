@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="https://raw.githubusercontent.com/taciturnaxolotl/miako/master/.github/images/miako.webp" width="200" alt="Logo"/><br/>
+    <img src="https://raw.githubusercontent.com/taciturnaxolotl/miako/master/.github/images/miako.gif" width="200" alt="Logo"/><br/>
     <img src="https://raw.githubusercontent.com/taciturnaxolotl/carriage/master/.github/images/transparent.png" height="45" width="0px"/>
     Miako
     <img src="https://raw.githubusercontent.com/taciturnaxolotl/carriage/master/.github/images/transparent.png" height="30" width="0px"/>
