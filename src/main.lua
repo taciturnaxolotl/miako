@@ -3,7 +3,8 @@ DEBUG = false
 DebugOptions = {
     showCollisions = true,
     showVelocities = true,
-    showInfo = true
+    showInfo = true,
+    showProjectiles = true
 }
 
 function love.load()
@@ -58,6 +59,8 @@ function love.keypressed(key)
         DebugOptions.showVelocities = not DebugOptions.showVelocities
     elseif key == "f4" then
         DebugOptions.showInfo = not DebugOptions.showInfo
+    elseif key == "f5" then
+        DebugOptions.showProjectiles = not DebugOptions.showProjectiles
     end
 end
 
@@ -156,6 +159,17 @@ function love.draw()
         love.graphics.circle("fill", (WindowWidth) - 12, 80, 8)
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("Show Info (F4)", WindowWidth - 300, 63)
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.circle("fill", (WindowWidth) - 12, 110, 10)
+        if DebugOptions.showProjectiles then
+            love.graphics.setColor(0, 1, 0, 1)
+        else
+            love.graphics.setColor(0, 0, 0)
+        end
+        love.graphics.circle("fill", (WindowWidth) - 12, 110, 8)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Show Projectiles (F5)", WindowWidth - 300, 93)
 
         love.graphics.setFont(originalFont)
     end

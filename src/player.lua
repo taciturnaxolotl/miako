@@ -1,4 +1,5 @@
 local loader = require "libs.lovease"
+local Projectile = require "projectile"
 
 local module = {}
 local player = {}
@@ -85,8 +86,12 @@ local function new(dir)
         gravity = 680,
         isFalling = false,
         groundY = GameHeight,
-        state = "idle", -- Add state tracking
-        direction = 1   -- Add direction tracking (1 for right, -1 for left)
+        state = "idle",
+        direction = 1,       -- Add direction tracking (1 for right, -1 for left)
+        projectiles = {},    -- Store active projectiles
+        canShoot = true,     -- Control shooting rate
+        shootCooldown = 0.5, -- Time between shots
+        shootTimer = 0,      -- Track cooldown
     }, player)
 end
 
@@ -97,6 +102,24 @@ function player:play(name)
         self.index = self.tags[name].from
         self.time = 0
         self.active = name
+    end
+end
+
+function player:shoot()
+    if self.canShoot then
+        local projectileSpeed = 300
+        local spawnX = self.direction == 1 and
+            (self.position.x + self.width) or
+            self.position.x
+        local spawnY = self.position.y - self.height
+
+        local projectile = Projectile.new(
+            { x = spawnX, y = spawnY },
+            { x = projectileSpeed * self.direction, y = 0 }
+        )
+        table.insert(self.projectiles, projectile)
+        self.canShoot = false
+        self.shootTimer = self.shootCooldown
     end
 end
 
@@ -131,12 +154,30 @@ function player:update(delta)
 
             if self.index > tag.to then
                 if self.active == "attack" then
+                    self:shoot()
                     self.state = "idle"
                     self:play("idle")
                 else
                     self.index = tag.from
                 end
             end
+        end
+    end
+
+    -- Update shoot timer
+    if not self.canShoot then
+        self.shootTimer = self.shootTimer - delta
+        if self.shootTimer <= 0 then
+            self.canShoot = true
+        end
+    end
+
+    -- Update projectiles
+    for i = #self.projectiles, 1, -1 do
+        local projectile = self.projectiles[i]
+        projectile:update(Obstacles, GameWidth, GameHeight, delta)
+        if projectile.isDead then
+            table.remove(self.projectiles, i)
         end
     end
 
@@ -271,6 +312,9 @@ function player:draw()
     -- Draw the sprite
     local xOffset = self.direction == -1 and self.position.x + self.width or self.position.x
     love.graphics.draw(self.frames[self.index].image, xOffset, self.position.y - self.height, 0, self.direction, 1)
+    for _, projectile in ipairs(self.projectiles) do
+        projectile:draw()
+    end
 end
 
 function player:drawDebug(x, y, scale)
@@ -384,6 +428,18 @@ function player:drawDebug(x, y, scale)
 
             -- Restore original font
             love.graphics.setFont(originalFont)
+        end
+
+        if DebugOptions.showProjectiles then
+            love.graphics.setColor(1, 1, 0, 0.5)
+            for _, projectile in ipairs(self.projectiles) do
+                love.graphics.rectangle("line",
+                    projectile.position.x * scale + x,
+                    projectile.position.y * scale + y,
+                    projectile.sprite.width * scale,
+                    projectile.sprite.height * scale
+                )
+            end
         end
 
         -- Reset color
