@@ -84,37 +84,35 @@ local function new(dir)
         jumpForce = -400,
         isFalling = false,
         groundY = GameHeight,
+        state = "idle" -- Add state tracking
     }, sprite)
 end
 
 function sprite:play(name)
     assert(self.tags[name], "invalid tag: " .. name)
 
-    -- if arent playing...
-    -- prevent indexes bigger than tag to
     if self.active ~= name then
         self.index = self.tags[name].from
+        self.time = 0
+        self.active = name
     end
-
-    self.active = name
 end
 
 function sprite:update(delta)
     assert(self.active, "no tag playing, sure you set this in aseprite?")
     local tag = self.tags[self.active]
 
-    -- time tracker are useless on single frames...
+    -- Update animation
     if (tag.to - tag.from) ~= 0 then
         self.time = self.time + delta
 
-        -- next frame
         if self.time >= self.frames[self.index].duration then
             self.index = self.index + 1
-            self.time = 0 -- you can change to "self.time - frame.duration" as well
+            self.time = 0
 
-            -- reach the end, return to begin
             if self.index > tag.to then
                 if self.active == "attack" then
+                    self.state = "idle"
                     self:play("idle")
                 else
                     self.index = tag.from
@@ -123,6 +121,7 @@ function sprite:update(delta)
         end
     end
 
+    -- Movement logic
     if love.keyboard.isDown('left') then
         if self.velocity.x > 0 then
             self.velocity.x = -self.velocity.x
@@ -130,6 +129,9 @@ function sprite:update(delta)
         local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
         local accelerationFactor = 1 - speedRatio
         self.velocity.x = math.max(-self.maxSpeed, self.velocity.x - self.acceleration * accelerationFactor * delta)
+        if self.state ~= "jumping" and self.state ~= "falling" and self.state ~= "attack" then
+            self.state = "running"
+        end
     elseif love.keyboard.isDown("right") then
         if self.velocity.x < 0 then
             self.velocity.x = -self.velocity.x
@@ -137,28 +139,26 @@ function sprite:update(delta)
         local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
         local accelerationFactor = 1 - speedRatio
         self.velocity.x = math.min(self.maxSpeed, self.velocity.x + self.acceleration * accelerationFactor * delta)
-    end
-
-    -- Horizontal movement with friction
-    if not love.keyboard.isDown('left') and not love.keyboard.isDown('right') then
-        -- Apply friction when no movement keys are pressed
+        if self.state ~= "jumping" and self.state ~= "falling" and self.state ~= "attack" then
+            self.state = "running"
+        end
+    else
+        -- Apply friction
         if self.velocity.x > 0 then
             self.velocity.x = math.max(0, self.velocity.x - self.friction * delta)
         elseif self.velocity.x < 0 then
             self.velocity.x = math.min(0, self.velocity.x + self.friction * delta)
         end
+        if math.abs(self.velocity.x) < 10 and self.state ~= "jumping" and self.state ~= "falling" and self.state ~= "attack" then
+            self.state = "idle"
+        end
     end
 
-    -- Clamp velocity to max speed
     self.velocity.x = math.min(self.maxSpeed, math.max(-self.maxSpeed, self.velocity.x))
-
-    -- Update horizontal position
     self.position.x = self.position.x + self.velocity.x * delta
 
-    -- Vertical movement (jumping)
+    -- Vertical movement
     local gravity = 980
-
-    -- Apply gravity
     self.velocity.y = self.velocity.y + gravity * delta
     self.position.y = self.position.y + self.velocity.y * delta
 
@@ -166,65 +166,48 @@ function sprite:update(delta)
     if self.position.y > self.groundY then
         self.position.y = self.groundY
         self.velocity.y = 0
-        self.isFalling = false
         self.currentJumps = 0
+        if self.state == "falling" then
+            self.state = "idle"
+        end
     end
 
-    -- Update falling state
-    if self.velocity.y > 50 then
-        self.isFalling = true
-    end
-
-    -- Check if moving horizontally
-    self.isMoving = math.abs(self.velocity.x) > 10
-
-    -- Animation state management
-    print(tag.name)
-
+    -- Update state based on vertical movement
     if self.velocity.y < 0 then
-        self:play("jump")
-    elseif self.isFalling then
-        self:play("jump")
+        self.state = "jumping"
+    elseif self.velocity.y > 50 then
+        self.state = "falling"
     end
-    if not self.isMoving and self.velocity.y == 0 and not tag.name == "attack" then
+
+    -- Update animation based on state
+    if self.state == "idle" then
         self:play("idle")
+    elseif self.state == "running" then
+        self:play("run")
+    elseif self.state == "jumping" or self.state == "falling" then
+        self:play("jump")
     end
 end
 
 function sprite:key(key)
-    -- handle arrow keys
-    if key == "left" then
-        if self.velocity.x > 0 then
-            self.velocity.x = -self.velocity.x
+    if key == "left" or key == "right" then
+        if self.state ~= "attack" then
+            self.state = "running"
         end
-        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
-        local accelerationFactor = 1 - speedRatio
-        self.velocity.x = math.max(-self.maxSpeed, self.velocity.x - self.acceleration * accelerationFactor)
-        self:play("run")
-    elseif key == "right" then
-        if self.velocity.x < 0 then
-            self.velocity.x = -self.velocity.x
-        end
-        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
-        local accelerationFactor = 1 - speedRatio
-        self.velocity.x = math.min(self.maxSpeed, self.velocity.x + self.acceleration * accelerationFactor)
-        self:play("run")
     elseif key == "up" then
-        -- Allow jumping if we haven't exceeded max jumps
         if self.currentJumps < self.maxJumps then
             self.velocity.y = self.jumpForce
             self.currentJumps = self.currentJumps + 1
-            self.isFalling = false
-            self:play("jump")
+            self.state = "jumping"
         end
-    elseif key == "space" then
+    elseif key == "space" and self.state ~= "attack" then
+        self.state = "attack"
         self:play("attack")
     end
 end
 
 function sprite:draw()
-    love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1,
-        1)
+    love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1, 1)
 end
 
 module.new = new
