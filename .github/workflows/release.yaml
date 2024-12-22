@@ -18,7 +18,7 @@ jobs:
       - name: Build Web Version
         run: |
           npm install -g love.js
-          love.js miako.love web -c
+          love.js miako.love web -c -t "Miako"
 
       - name: Zip Web Build
         run: |
