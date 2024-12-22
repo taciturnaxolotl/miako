@@ -99,10 +99,20 @@ function sprite:play(name)
 end
 
 function sprite:checkCollision(obstacle)
-    return self.position.x < obstacle.x + obstacle.width and
-        self.position.x + self.width > obstacle.x and
-        self.position.y < obstacle.y + obstacle.height and
-        self.position.y + self.height > obstacle.y
+    -- Calculate the collision box offset from sprite position
+    local collisionWidth = 14  -- narrow center collision width
+    local collisionHeight = 30 -- bottom collision height
+
+    -- Center the collision box horizontally
+    local collisionX = self.position.x + (self.width - collisionWidth) / 2
+    -- Position the collision box at the bottom of the sprite
+    local collisionY = self.position.y - collisionHeight
+
+    -- Check collision with adjusted box dimensions
+    return collisionX < obstacle.x + obstacle.width and
+        collisionX + collisionWidth > obstacle.x and
+        collisionY < obstacle.y + obstacle.height and
+        collisionY + collisionHeight > obstacle.y
 end
 
 function sprite:update(delta)
@@ -176,29 +186,35 @@ function sprite:update(delta)
     -- Check collision with obstacles
     for _, obstacle in ipairs(Obstacles) do
         if self:checkCollision(obstacle) then
+            -- Calculate collision box position
+            local collisionWidth = 14
+            local collisionHeight = 30
+            local collisionX = previousX + (self.width - collisionWidth) / 2
+            local collisionY = previousY - collisionHeight
+
             -- Handle vertical collision
-            if self.velocity.y > 0 and previousY + self.height <= obstacle.y then
+            if self.velocity.y > 0 and collisionY + collisionHeight <= obstacle.y then
                 -- Landing on top of obstacle
-                self.position.y = obstacle.y - self.height
+                self.position.y = obstacle.y + collisionHeight
                 self.velocity.y = 0
                 self.currentJumps = 0
                 if self.state == "falling" then
                     self.state = "idle"
                 end
-            elseif self.velocity.y < 0 and previousY >= obstacle.y + obstacle.height then
+            elseif self.velocity.y < 0 and collisionY >= obstacle.y + obstacle.height then
                 -- Hitting bottom of obstacle
-                self.position.y = obstacle.y + obstacle.height
+                self.position.y = obstacle.y + obstacle.height + collisionHeight
                 self.velocity.y = 0
             end
 
             -- Handle horizontal collision
-            if previousX + self.width <= obstacle.x then
+            if collisionX + collisionWidth <= obstacle.x then
                 -- Collision from left
-                self.position.x = obstacle.x - self.width
+                self.position.x = obstacle.x - (self.width + collisionWidth) / 2
                 self.velocity.x = 0
-            elseif previousX >= obstacle.x + obstacle.width then
+            elseif collisionX >= obstacle.x + obstacle.width then
                 -- Collision from right
-                self.position.x = obstacle.x + obstacle.width
+                self.position.x = obstacle.x + obstacle.width - (self.width - collisionWidth) / 2
                 self.velocity.x = 0
             end
         end
