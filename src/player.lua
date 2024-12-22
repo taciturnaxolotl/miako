@@ -284,10 +284,6 @@ function sprite:draw()
             -- Draw sprite bounds
             love.graphics.setColor(0, 1, 0, 0.5) -- Semi-transparent green
             love.graphics.rectangle("line", self.position.x, self.position.y - self.height, self.width, self.height)
-
-            -- Draw position point
-            love.graphics.setColor(0, 0, 1, 1) -- Blue
-            love.graphics.circle("fill", self.position.x, self.position.y, 2)
         end
 
         if DebugOptions.showVelocities then
@@ -311,6 +307,10 @@ function sprite:draw()
                 self.position.x,
                 self.position.y + self.velocity.y * vectorScale
             )
+
+            -- Draw position point
+            love.graphics.setColor(0, 0, 1, 1) -- Blue
+            love.graphics.circle("fill", self.position.x, self.position.y, 2)
         end
 
         if DebugOptions.showInfo then
