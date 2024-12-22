@@ -24,29 +24,9 @@ jobs:
         run: |
           cd web && zip -r ../web-build.zip .
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Love File
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./miako.love
-          asset_name: miako.love
-          asset_content_type: application/zip
-
-      - name: Upload Web Build
-        uses: actions/upload-artifact@v3
-        with:
-          name: web-build
-          path: web-build.zip
+          files: |
+            miako.love
+            web-build.zip
