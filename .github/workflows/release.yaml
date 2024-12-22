@@ -11,9 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Change Directory
+        run: cd src
+
       - name: Create Love File
         run: |
-          find . -type f \( -name "*.lua" -o -name "*.png" -o -name "*.mp3" -o -name "*.wav" \) -print | zip -@ miako.love
+          find . -type f \( -name "*.lua" -o -name "*.png" -o -name "*.mp3" -o -name "*.wav" -o -name "*.ase" \) -print | zip -@ miako.love
 
       - name: Build Web Version
         run: |
