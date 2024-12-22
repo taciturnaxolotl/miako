@@ -267,50 +267,62 @@ end
 function sprite:draw()
     -- Draw the sprite
     love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1, 1)
+end
 
-    -- Debug visualization
+function sprite:drawDebug(x, y, scale)
     if DEBUG then
         if DebugOptions.showCollisions then
             -- Draw collision boxes
-            love.graphics.setColor(1, 0, 0, 0.5) -- Semi-transparent red
+            love.graphics.setColor(1, 0, 0, 0.5)
             local collisionWidth = 14
             local collisionHeight = 30
-            local collisionX = self.position.x + (self.width - collisionWidth) / 2
-            local collisionY = self.position.y - collisionHeight
+            local collisionX = (self.position.x + (self.width - collisionWidth) / 2) * scale + x
+            local collisionY = (self.position.y - collisionHeight) * scale + y
 
             -- Draw collision box
-            love.graphics.rectangle("line", collisionX, collisionY, collisionWidth, collisionHeight)
+            love.graphics.setLineWidth(5)
+            love.graphics.rectangle("line", collisionX, collisionY,
+                collisionWidth * scale, collisionHeight * scale)
 
             -- Draw sprite bounds
-            love.graphics.setColor(0, 1, 0, 0.5) -- Semi-transparent green
-            love.graphics.rectangle("line", self.position.x, self.position.y - self.height, self.width, self.height)
+            love.graphics.setLineWidth(2)
+            love.graphics.setColor(0, 1, 0, 0.5)
+            love.graphics.rectangle("line",
+                self.position.x * scale + x,
+                (self.position.y - self.height) * scale + y,
+                self.width * scale, self.height * scale)
+
+            -- reset line width
+            love.graphics.setLineWidth(1)
         end
 
         if DebugOptions.showVelocities then
-            -- Draw velocity vectors
-            local vectorScale = 0.5 -- Scale factor for velocity vectors
+            local vectorScale = 0.2 -- Scale the vector visualization
 
             -- Horizontal velocity (red)
             love.graphics.setColor(1, 0, 0, 1)
             love.graphics.line(
-                self.position.x,
-                self.position.y,
-                self.position.x + self.velocity.x * vectorScale,
-                self.position.y
+                self.position.x * scale + x,
+                self.position.y * scale + y,
+                (self.position.x + self.velocity.x * vectorScale) * scale + x,
+                self.position.y * scale + y
             )
 
             -- Vertical velocity (blue)
             love.graphics.setColor(0, 0, 1, 1)
             love.graphics.line(
-                self.position.x,
-                self.position.y,
-                self.position.x,
-                self.position.y + self.velocity.y * vectorScale
+                self.position.x * scale + x,
+                self.position.y * scale + y,
+                self.position.x * scale + x,
+                (self.position.y + self.velocity.y * vectorScale) * scale + y
             )
 
             -- Draw position point
-            love.graphics.setColor(0, 0, 1, 1) -- Blue
-            love.graphics.circle("fill", self.position.x, self.position.y, 2)
+            love.graphics.setColor(0, 0, 1, 1)
+            love.graphics.circle("fill",
+                self.position.x * scale + x,
+                self.position.y * scale + y,
+                2 * scale)
         end
 
         if DebugOptions.showInfo then
@@ -318,14 +330,15 @@ function sprite:draw()
             love.graphics.setColor(1, 1, 1, 1)
 
             -- Draw debug info panel
-            local debugX = 10
-            local debugY = 10
-            local lineHeight = 15
+            local debugX = 20
+            local debugY = 20
+            local lineHeight = 6 * scale
+            local fontSize = 5 * scale
 
-            -- Background for debug text
-            love.graphics.setColor(0, 0, 0, 0.7)
-            love.graphics.rectangle("fill", debugX - 5, debugY - 5, 200, 130)
-            love.graphics.setColor(1, 1, 1, 1)
+            -- Create a larger font for debug text
+            local debugFont = love.graphics.newFont(fontSize)
+            local originalFont = love.graphics.getFont()
+            love.graphics.setFont(debugFont)
 
             -- Debug text information
             love.graphics.print(string.format("Position: %.1f, %.1f", self.position.x, self.position.y),
@@ -344,6 +357,9 @@ function sprite:draw()
                 debugX, debugY + lineHeight * 6)
             love.graphics.print(string.format("Is Falling: %s", tostring(self.velocity.y > 0)),
                 debugX, debugY + lineHeight * 7)
+
+            -- Restore original font
+            love.graphics.setFont(originalFont)
         end
 
         -- Reset color

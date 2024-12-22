@@ -68,59 +68,14 @@ function love.draw()
 
     -- Draw obstacles
     for _, obstacle in ipairs(Obstacles) do
-        -- Draw obstacle fill
         love.graphics.setColor(0.5, 0.5, 0.5)
         love.graphics.rectangle("fill", obstacle.x, obstacle.y,
             obstacle.width, obstacle.height)
-
-        -- Debug visualization for obstacles
-        if DEBUG and DebugOptions.showCollisions then
-            love.graphics.setColor(1, 1, 0, 0.5) -- Semi-transparent yellow
-            love.graphics.rectangle("line", obstacle.x, obstacle.y,
-                obstacle.width, obstacle.height)
-
-            -- Draw obstacle coordinates
-            if DebugOptions.showInfo then
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.print(string.format("x:%.0f y:%.0f", obstacle.x, obstacle.y),
-                    obstacle.x, obstacle.y - 20)
-            end
-        end
     end
 
     -- Reset color and draw player
     love.graphics.setColor(1, 1, 1)
     player:draw()
-
-    -- Draw option indicator circles in top right
-    if DEBUG then
-        love.graphics.setColor(0.1, 0.1, 0.1)
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 20, 10)
-        if DebugOptions.showCollisions then
-            love.graphics.setColor(1, 1, 0, 0.5) -- Semi-transparent yellow
-        else
-            love.graphics.setColor(0, 0, 0)
-        end
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 20, 8)
-
-        love.graphics.setColor(0.1, 0.1, 0.1)
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 40, 10)
-        if DebugOptions.showVelocities then
-            love.graphics.setColor(1, 0, 0, 1)
-        else
-            love.graphics.setColor(0, 0, 0)
-        end
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 40, 8)
-
-        love.graphics.setColor(0.1, 0.1, 0.1)
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 60, 10)
-        if DebugOptions.showInfo then
-            love.graphics.setColor(1, 1, 1, 1)
-        else
-            love.graphics.setColor(0, 0, 0)
-        end
-        love.graphics.circle("fill", (GameWidth * Scale) / 2 - 12, 60, 8)
-    end
 
     -- Draw game canvas to window canvas
     love.graphics.setCanvas(WindowCanvas)
@@ -133,6 +88,77 @@ function love.draw()
     -- Draw scaled game canvas centered
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(GameCanvas, x, y, 0, Scale, Scale)
+
+
+    -- Draw debug information on window canvas
+    if DEBUG then
+        -- draw outline of game canvas
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.rectangle("line", x, y, GameWidth * Scale, GameHeight * Scale)
+
+        -- Draw debug visualization for obstacles
+        for _, obstacle in ipairs(Obstacles) do
+            if DebugOptions.showCollisions then
+                love.graphics.setColor(1, 1, 0, 0.5)
+                love.graphics.rectangle("line",
+                    obstacle.x * Scale + x,
+                    obstacle.y * Scale + y,
+                    obstacle.width * Scale,
+                    obstacle.height * Scale)
+
+                if DebugOptions.showInfo then
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.print(string.format("x:%.0f y:%.0f",
+                            obstacle.x, obstacle.y),
+                        obstacle.x * Scale + x,
+                        obstacle.y * Scale + y - 20 * Scale)
+                end
+            end
+        end
+
+        -- Draw player debug information
+        player:drawDebug(x, y, Scale)
+
+        -- Draw debug option indicators
+        local debugFont = love.graphics.newFont(24)
+        local originalFont = love.graphics.getFont()
+        love.graphics.setFont(debugFont)
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.circle("fill", (WindowWidth) - 12, 20, 10)
+        if DebugOptions.showCollisions then
+            love.graphics.setColor(1, 1, 0, 0.5) -- Semi-transparent yellow
+        else
+            love.graphics.setColor(0, 0, 0)
+        end
+        love.graphics.circle("fill", (WindowWidth) - 12, 20, 8)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Show Collisions (F2)", WindowWidth - 300, 3)
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.circle("fill", (WindowWidth) - 12, 50, 10)
+        if DebugOptions.showVelocities then
+            love.graphics.setColor(1, 0, 0, 1)
+        else
+            love.graphics.setColor(0, 0, 0)
+        end
+        love.graphics.circle("fill", (WindowWidth) - 12, 50, 8)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Show Velocities (F3)", WindowWidth - 300, 33)
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.circle("fill", (WindowWidth) - 12, 80, 10)
+        if DebugOptions.showInfo then
+            love.graphics.setColor(1, 1, 1, 1)
+        else
+            love.graphics.setColor(0, 0, 0)
+        end
+        love.graphics.circle("fill", (WindowWidth) - 12, 80, 8)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Show Info (F4)", WindowWidth - 300, 63)
+
+        love.graphics.setFont(originalFont)
+    end
 
     -- Draw window canvas to screen
     love.graphics.setCanvas()
