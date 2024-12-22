@@ -266,6 +266,36 @@ end
 
 function sprite:draw()
     love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1, 1)
+
+    -- Debug visualization
+    if DEBUG then
+        -- Draw sprite's collision box
+        love.graphics.setColor(1, 0, 0, 0.5) -- Semi-transparent red
+        local collisionWidth = 14
+        local collisionHeight = 30
+        local collisionX = self.position.x + (self.width - collisionWidth) / 2
+        local collisionY = self.position.y - collisionHeight
+
+        -- Draw collision box
+        love.graphics.rectangle("line", collisionX, collisionY, collisionWidth, collisionHeight)
+
+        -- Draw sprite bounds for reference
+        love.graphics.setColor(0, 1, 0, 0.5) -- Semi-transparent green
+        love.graphics.rectangle("line", self.position.x, self.position.y - self.height, self.width, self.height)
+
+        -- Draw position point
+        love.graphics.setColor(0, 0, 1, 1) -- Blue
+        love.graphics.circle("fill", self.position.x, self.position.y, 2)
+
+        -- Reset color
+        love.graphics.setColor(1, 1, 1, 1)
+
+        -- Draw debug info
+        love.graphics.print(string.format("Position: %.0f, %.0f", self.position.x, self.position.y), 10, 10)
+        love.graphics.print(string.format("Velocity: %.0f, %.0f", self.velocity.x, self.velocity.y), 10, 25)
+        love.graphics.print("State: " .. self.state, 10, 40)
+        love.graphics.print("Jumps: " .. self.currentJumps .. "/" .. self.maxJumps, 10, 55)
+    end
 end
 
 module.new = new
