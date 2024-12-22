@@ -265,36 +265,89 @@ function sprite:key(key)
 end
 
 function sprite:draw()
+    -- Draw the sprite
     love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1, 1)
 
     -- Debug visualization
     if DEBUG then
-        -- Draw sprite's collision box
-        love.graphics.setColor(1, 0, 0, 0.5) -- Semi-transparent red
-        local collisionWidth = 14
-        local collisionHeight = 30
-        local collisionX = self.position.x + (self.width - collisionWidth) / 2
-        local collisionY = self.position.y - collisionHeight
+        if DebugOptions.showCollisions then
+            -- Draw collision boxes
+            love.graphics.setColor(1, 0, 0, 0.5) -- Semi-transparent red
+            local collisionWidth = 14
+            local collisionHeight = 30
+            local collisionX = self.position.x + (self.width - collisionWidth) / 2
+            local collisionY = self.position.y - collisionHeight
 
-        -- Draw collision box
-        love.graphics.rectangle("line", collisionX, collisionY, collisionWidth, collisionHeight)
+            -- Draw collision box
+            love.graphics.rectangle("line", collisionX, collisionY, collisionWidth, collisionHeight)
 
-        -- Draw sprite bounds for reference
-        love.graphics.setColor(0, 1, 0, 0.5) -- Semi-transparent green
-        love.graphics.rectangle("line", self.position.x, self.position.y - self.height, self.width, self.height)
+            -- Draw sprite bounds
+            love.graphics.setColor(0, 1, 0, 0.5) -- Semi-transparent green
+            love.graphics.rectangle("line", self.position.x, self.position.y - self.height, self.width, self.height)
 
-        -- Draw position point
-        love.graphics.setColor(0, 0, 1, 1) -- Blue
-        love.graphics.circle("fill", self.position.x, self.position.y, 2)
+            -- Draw position point
+            love.graphics.setColor(0, 0, 1, 1) -- Blue
+            love.graphics.circle("fill", self.position.x, self.position.y, 2)
+        end
+
+        if DebugOptions.showVelocities then
+            -- Draw velocity vectors
+            local vectorScale = 0.5 -- Scale factor for velocity vectors
+
+            -- Horizontal velocity (red)
+            love.graphics.setColor(1, 0, 0, 1)
+            love.graphics.line(
+                self.position.x,
+                self.position.y,
+                self.position.x + self.velocity.x * vectorScale,
+                self.position.y
+            )
+
+            -- Vertical velocity (blue)
+            love.graphics.setColor(0, 0, 1, 1)
+            love.graphics.line(
+                self.position.x,
+                self.position.y,
+                self.position.x,
+                self.position.y + self.velocity.y * vectorScale
+            )
+        end
+
+        if DebugOptions.showInfo then
+            -- Reset color
+            love.graphics.setColor(1, 1, 1, 1)
+
+            -- Draw debug info panel
+            local debugX = 10
+            local debugY = 10
+            local lineHeight = 15
+
+            -- Background for debug text
+            love.graphics.setColor(0, 0, 0, 0.7)
+            love.graphics.rectangle("fill", debugX - 5, debugY - 5, 200, 130)
+            love.graphics.setColor(1, 1, 1, 1)
+
+            -- Debug text information
+            love.graphics.print(string.format("Position: %.1f, %.1f", self.position.x, self.position.y),
+                debugX, debugY)
+            love.graphics.print(string.format("Velocity X: %.1f", self.velocity.x),
+                debugX, debugY + lineHeight)
+            love.graphics.print(string.format("Velocity Y: %.1f", self.velocity.y),
+                debugX, debugY + lineHeight * 2)
+            love.graphics.print(string.format("Speed: %.1f", math.sqrt(self.velocity.x ^ 2 + self.velocity.y ^ 2)),
+                debugX, debugY + lineHeight * 3)
+            love.graphics.print("State: " .. self.state,
+                debugX, debugY + lineHeight * 4)
+            love.graphics.print(string.format("Jumps: %d/%d", self.currentJumps, self.maxJumps),
+                debugX, debugY + lineHeight * 5)
+            love.graphics.print(string.format("Max Speed: %.1f", self.maxSpeed),
+                debugX, debugY + lineHeight * 6)
+            love.graphics.print(string.format("Is Falling: %s", tostring(self.velocity.y > 0)),
+                debugX, debugY + lineHeight * 7)
+        end
 
         -- Reset color
         love.graphics.setColor(1, 1, 1, 1)
-
-        -- Draw debug info
-        love.graphics.print(string.format("Position: %.0f, %.0f", self.position.x, self.position.y), 10, 10)
-        love.graphics.print(string.format("Velocity: %.0f, %.0f", self.velocity.x, self.velocity.y), 10, 25)
-        love.graphics.print("State: " .. self.state, 10, 40)
-        love.graphics.print("Jumps: " .. self.currentJumps .. "/" .. self.maxJumps, 10, 55)
     end
 end
 
