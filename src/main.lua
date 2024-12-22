@@ -1,4 +1,4 @@
-local Sprite = require "sprite"
+local Player = require "player"
 DEBUG = false
 DebugOptions = {
     showCollisions = true,
@@ -38,7 +38,7 @@ function love.load()
         { x = 350, y = 152.5, width = 15, height = 25 },
     }
 
-    player = Sprite("sprites/player.ase")
+    player = Player("sprites/player.ase")
     player:play("run")
 end
 

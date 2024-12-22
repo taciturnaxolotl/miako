@@ -76,12 +76,13 @@ local function new(dir)
         targetPosition = targetPosition,
         isMoving = false,
         velocity = { x = 0, y = 0 },
-        maxSpeed = 250,
-        acceleration = 200,
-        friction = 700,
+        maxSpeed = 340,
+        acceleration = 250,
+        friction = 1200,
         maxJumps = 3,
         currentJumps = 0,
-        jumpForce = -400,
+        jumpForce = -230,
+        gravity = 680,
         isFalling = false,
         groundY = GameHeight,
         state = "idle" -- Add state tracking
@@ -179,8 +180,7 @@ function sprite:update(delta)
     self.position.x = self.position.x + self.velocity.x * delta
 
     -- Vertical movement
-    local gravity = 980
-    self.velocity.y = self.velocity.y + gravity * delta
+    self.velocity.y = self.velocity.y + self.gravity * delta
     self.position.y = self.position.y + self.velocity.y * delta
 
     -- Check collision with obstacles
