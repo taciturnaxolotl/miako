@@ -10,7 +10,7 @@ function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
 
     -- Set up game resolution and scaling
-    GameWidth, GameHeight = 380 * 2, 180 * 2
+    GameWidth, GameHeight = 380, 180
     WindowWidth, WindowHeight = love.window.getDesktopDimensions()
 
     -- Calculate max integer scale that fits screen
@@ -29,13 +29,13 @@ function love.load()
 
     -- Create obstacles
     Obstacles = {
-        { x = 100, y = 365, width = 30, height = 50 },
-        { x = 200, y = 355, width = 30, height = 50 },
-        { x = 300, y = 345, width = 30, height = 50 },
-        { x = 400, y = 335, width = 30, height = 50 },
-        { x = 500, y = 325, width = 30, height = 50 },
-        { x = 600, y = 315, width = 30, height = 50 },
-        { x = 700, y = 305, width = 30, height = 50 },
+        { x = 50,  y = 182.5, width = 15, height = 25 },
+        { x = 100, y = 177.5, width = 15, height = 25 },
+        { x = 150, y = 172.5, width = 15, height = 25 },
+        { x = 200, y = 167.5, width = 15, height = 25 },
+        { x = 250, y = 162.5, width = 15, height = 25 },
+        { x = 300, y = 157.5, width = 15, height = 25 },
+        { x = 350, y = 152.5, width = 15, height = 25 },
     }
 
     player = Sprite("sprites/player.ase")

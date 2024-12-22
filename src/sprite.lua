@@ -195,7 +195,7 @@ function sprite:update(delta)
             -- Handle vertical collision
             if self.velocity.y > 0 and collisionY + collisionHeight <= obstacle.y then
                 -- Landing on top of obstacle
-                self.position.y = obstacle.y + collisionHeight
+                self.position.y = obstacle.y -- Changed this line
                 self.velocity.y = 0
                 self.currentJumps = 0
                 if self.state == "falling" then
@@ -203,7 +203,7 @@ function sprite:update(delta)
                 end
             elseif self.velocity.y < 0 and collisionY >= obstacle.y + obstacle.height then
                 -- Hitting bottom of obstacle
-                self.position.y = obstacle.y + obstacle.height + collisionHeight
+                self.position.y = obstacle.y + obstacle.height + self.height -- Changed this line
                 self.velocity.y = 0
             end
 
