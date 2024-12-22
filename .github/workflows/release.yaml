@@ -46,7 +46,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: Upload Web Build
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: web-build
           path: web-build.zip
