@@ -1,8 +1,8 @@
 local loader = require "libs.lovease"
 
 local module = {}
-local sprite = {}
-sprite.__index = sprite
+local player = {}
+player.__index = player
 
 local function new(dir)
     local file = loader(dir)
@@ -85,11 +85,12 @@ local function new(dir)
         gravity = 680,
         isFalling = false,
         groundY = GameHeight,
-        state = "idle" -- Add state tracking
-    }, sprite)
+        state = "idle", -- Add state tracking
+        direction = 1   -- Add direction tracking (1 for right, -1 for left)
+    }, player)
 end
 
-function sprite:play(name)
+function player:play(name)
     assert(self.tags[name], "invalid tag: " .. name)
 
     if self.active ~= name then
@@ -99,14 +100,14 @@ function sprite:play(name)
     end
 end
 
-function sprite:checkCollision(obstacle)
-    -- Calculate the collision box offset from sprite position
+function player:checkCollision(obstacle)
+    -- Calculate the collision box offset from player position
     local collisionWidth = 14  -- narrow center collision width
     local collisionHeight = 30 -- bottom collision height
 
     -- Center the collision box horizontally
     local collisionX = self.position.x + (self.width - collisionWidth) / 2
-    -- Position the collision box at the bottom of the sprite
+    -- Position the collision box at the bottom of the player
     local collisionY = self.position.y - collisionHeight
 
     -- Check collision with adjusted box dimensions
@@ -116,7 +117,7 @@ function sprite:checkCollision(obstacle)
         collisionY + collisionHeight > obstacle.y
 end
 
-function sprite:update(delta)
+function player:update(delta)
     assert(self.active, "no tag playing, sure you set this in aseprite?")
     local tag = self.tags[self.active]
 
@@ -143,8 +144,9 @@ function sprite:update(delta)
     local previousX = self.position.x
     local previousY = self.position.y
 
-    -- Movement logic
+    -- Movement logic with direction tracking
     if love.keyboard.isDown('left') then
+        self.direction = -1
         if self.velocity.x > 0 then
             self.velocity.x = -self.velocity.x
         end
@@ -155,6 +157,7 @@ function sprite:update(delta)
             self.state = "running"
         end
     elseif love.keyboard.isDown("right") then
+        self.direction = 1
         if self.velocity.x < 0 then
             self.velocity.x = -self.velocity.x
         end
@@ -247,7 +250,7 @@ function sprite:update(delta)
     end
 end
 
-function sprite:key(key)
+function player:key(key)
     if key == "left" or key == "right" then
         if self.state ~= "attack" then
             self.state = "running"
@@ -264,12 +267,13 @@ function sprite:key(key)
     end
 end
 
-function sprite:draw()
+function player:draw()
     -- Draw the sprite
-    love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1, 1)
+    local xOffset = self.direction == -1 and self.position.x + self.width or self.position.x
+    love.graphics.draw(self.frames[self.index].image, xOffset, self.position.y - self.height, 0, self.direction, 1)
 end
 
-function sprite:drawDebug(x, y, scale)
+function player:drawDebug(x, y, scale)
     if DEBUG then
         if DebugOptions.showCollisions then
             -- Draw collision boxes
@@ -284,7 +288,7 @@ function sprite:drawDebug(x, y, scale)
             love.graphics.rectangle("line", collisionX, collisionY,
                 collisionWidth * scale, collisionHeight * scale)
 
-            -- Draw sprite bounds
+            -- Draw player bounds
             love.graphics.setLineWidth(2)
             love.graphics.setColor(0, 1, 0, 0.5)
             love.graphics.rectangle("line",
@@ -315,6 +319,26 @@ function sprite:drawDebug(x, y, scale)
                 self.position.y * scale + y,
                 self.position.x * scale + x,
                 (self.position.y + self.velocity.y * vectorScale) * scale + y
+            )
+
+            -- Direction vector (green)
+            love.graphics.setColor(0, 1, 0, 1)
+            local centerX = (self.position.x + self.width / 2) * scale + x
+            local centerY = (self.position.y - self.height / 2) * scale + y
+            love.graphics.line(
+                centerX,
+                centerY,
+                centerX + self.direction * 20 * scale,
+                centerY
+            )
+            -- Arrow head
+            love.graphics.polygon('fill',
+                centerX + self.direction * 20 * scale,
+                centerY,
+                centerX + self.direction * 16 * scale,
+                centerY - 5 * scale,
+                centerX + self.direction * 16 * scale,
+                centerY + 5 * scale
             )
 
             -- Draw position point
