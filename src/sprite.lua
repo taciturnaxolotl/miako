@@ -98,6 +98,13 @@ function sprite:play(name)
     end
 end
 
+function sprite:checkCollision(obstacle)
+    return self.position.x < obstacle.x + obstacle.width and
+        self.position.x + self.width > obstacle.x and
+        self.position.y < obstacle.y + obstacle.height and
+        self.position.y + self.height > obstacle.y
+end
+
 function sprite:update(delta)
     assert(self.active, "no tag playing, sure you set this in aseprite?")
     local tag = self.tags[self.active]
@@ -120,6 +127,10 @@ function sprite:update(delta)
             end
         end
     end
+
+    -- Store previous position for collision resolution
+    local previousX = self.position.x
+    local previousY = self.position.y
 
     -- Movement logic
     if love.keyboard.isDown('left') then
@@ -161,6 +172,37 @@ function sprite:update(delta)
     local gravity = 980
     self.velocity.y = self.velocity.y + gravity * delta
     self.position.y = self.position.y + self.velocity.y * delta
+
+    -- Check collision with obstacles
+    for _, obstacle in ipairs(Obstacles) do
+        if self:checkCollision(obstacle) then
+            -- Handle vertical collision
+            if self.velocity.y > 0 and previousY + self.height <= obstacle.y then
+                -- Landing on top of obstacle
+                self.position.y = obstacle.y - self.height
+                self.velocity.y = 0
+                self.currentJumps = 0
+                if self.state == "falling" then
+                    self.state = "idle"
+                end
+            elseif self.velocity.y < 0 and previousY >= obstacle.y + obstacle.height then
+                -- Hitting bottom of obstacle
+                self.position.y = obstacle.y + obstacle.height
+                self.velocity.y = 0
+            end
+
+            -- Handle horizontal collision
+            if previousX + self.width <= obstacle.x then
+                -- Collision from left
+                self.position.x = obstacle.x - self.width
+                self.velocity.x = 0
+            elseif previousX >= obstacle.x + obstacle.width then
+                -- Collision from right
+                self.position.x = obstacle.x + obstacle.width
+                self.velocity.x = 0
+            end
+        end
+    end
 
     -- Ground collision
     if self.position.y > self.groundY then
