@@ -44,6 +44,14 @@ love miako.love
 
 You don't need to! The game is already build and ready to play! I have a handy github action that builds the game for you and uploads it to the releases page. If you want to build the game yourself all you need to do is zip the `src` folder and rename it to `miako.love` and you are good to go!
 
+## Really usefull things
+
+- [Love2D](https://love2d.org/)
+- [Love ASE](https://github.com/elloramir/love-ase) (for loading aseprite files)
+- [Aseprite](https://www.aseprite.org/) (for making the sprites; also i just can't say enough about how awesome this program is)
+- [Spotify](https://www.spotify.com/) (mood music while coding and uhh game music 🫣)
+- [Hack Club](https://hackclub.com/) (for hosting the jam and being an awesome community)
+
 ## Why that License?
 
 Well its the template license and I don't have time to change it lol.
