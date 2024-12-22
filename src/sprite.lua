@@ -23,7 +23,6 @@ local function new(dir)
         x = 0,
         y = 0
     }
-    local isMoving = false
 
     for _, frame in ipairs(file.header.frames) do
         for _, chunk in ipairs(frame.chunks) do
@@ -75,7 +74,16 @@ local function new(dir)
         time = time,
         position = position,
         targetPosition = targetPosition,
-        isMoving = isMoving,
+        isMoving = false,
+        velocity = { x = 0, y = 0 },
+        maxSpeed = 250,
+        acceleration = 200,
+        friction = 700,
+        maxJumps = 3,
+        currentJumps = 0,
+        jumpForce = -400,
+        isFalling = false,
+        groundY = GameHeight,
     }, sprite)
 end
 
@@ -106,25 +114,79 @@ function sprite:update(delta)
 
             -- reach the end, return to begin
             if self.index > tag.to then
-                self.index = tag.from
+                if self.active == "attack" then
+                    self:play("idle")
+                else
+                    self.index = tag.from
+                end
             end
         end
     end
 
-    -- Simple linear interpolation (lerp)
-    local speed = 25.0 -- Adjust this value to control movement speed (higher = faster)
+    if love.keyboard.isDown('left') then
+        if self.velocity.x > 0 then
+            self.velocity.x = -self.velocity.x
+        end
+        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
+        local accelerationFactor = 1 - speedRatio
+        self.velocity.x = math.max(-self.maxSpeed, self.velocity.x - self.acceleration * accelerationFactor * delta)
+    elseif love.keyboard.isDown("right") then
+        if self.velocity.x < 0 then
+            self.velocity.x = -self.velocity.x
+        end
+        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
+        local accelerationFactor = 1 - speedRatio
+        self.velocity.x = math.min(self.maxSpeed, self.velocity.x + self.acceleration * accelerationFactor * delta)
+    end
 
-    -- Move towards target
-    self.position.x = self.position.x + (self.targetPosition.x - self.position.x) * speed * delta
-    self.position.y = self.position.y + (self.targetPosition.y - self.position.y) * speed * delta
+    -- Horizontal movement with friction
+    if not love.keyboard.isDown('left') and not love.keyboard.isDown('right') then
+        -- Apply friction when no movement keys are pressed
+        if self.velocity.x > 0 then
+            self.velocity.x = math.max(0, self.velocity.x - self.friction * delta)
+        elseif self.velocity.x < 0 then
+            self.velocity.x = math.min(0, self.velocity.x + self.friction * delta)
+        end
+    end
 
-    -- Check if still moving
-    local dx = math.abs(self.position.x - self.targetPosition.x)
-    local dy = math.abs(self.position.y - self.targetPosition.y)
-    self.isMoving = (dx > 0.1 or dy > 0.1)
+    -- Clamp velocity to max speed
+    self.velocity.x = math.min(self.maxSpeed, math.max(-self.maxSpeed, self.velocity.x))
 
-    -- If not moving, switch to idle animation
-    if not self.isMoving then
+    -- Update horizontal position
+    self.position.x = self.position.x + self.velocity.x * delta
+
+    -- Vertical movement (jumping)
+    local gravity = 980
+
+    -- Apply gravity
+    self.velocity.y = self.velocity.y + gravity * delta
+    self.position.y = self.position.y + self.velocity.y * delta
+
+    -- Ground collision
+    if self.position.y > self.groundY then
+        self.position.y = self.groundY
+        self.velocity.y = 0
+        self.isFalling = false
+        self.currentJumps = 0
+    end
+
+    -- Update falling state
+    if self.velocity.y > 50 then
+        self.isFalling = true
+    end
+
+    -- Check if moving horizontally
+    self.isMoving = math.abs(self.velocity.x) > 10
+
+    -- Animation state management
+    print(tag.name)
+
+    if self.velocity.y < 0 then
+        self:play("jump")
+    elseif self.isFalling then
+        self:play("jump")
+    end
+    if not self.isMoving and self.velocity.y == 0 and not tag.name == "attack" then
         self:play("idle")
     end
 end
@@ -132,22 +194,37 @@ end
 function sprite:key(key)
     -- handle arrow keys
     if key == "left" then
-        self.targetPosition.x = self.targetPosition.x - 100
+        if self.velocity.x > 0 then
+            self.velocity.x = -self.velocity.x
+        end
+        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
+        local accelerationFactor = 1 - speedRatio
+        self.velocity.x = math.max(-self.maxSpeed, self.velocity.x - self.acceleration * accelerationFactor)
         self:play("run")
     elseif key == "right" then
-        self.targetPosition.x = self.targetPosition.x + 100
+        if self.velocity.x < 0 then
+            self.velocity.x = -self.velocity.x
+        end
+        local speedRatio = math.abs(self.velocity.x) / self.maxSpeed
+        local accelerationFactor = 1 - speedRatio
+        self.velocity.x = math.min(self.maxSpeed, self.velocity.x + self.acceleration * accelerationFactor)
         self:play("run")
     elseif key == "up" then
-        self.targetPosition.y = self.targetPosition.y - 100
-        self:play("run")
-    elseif key == "down" then
-        self.targetPosition.y = self.targetPosition.y + 100
-        self:play("run")
+        -- Allow jumping if we haven't exceeded max jumps
+        if self.currentJumps < self.maxJumps then
+            self.velocity.y = self.jumpForce
+            self.currentJumps = self.currentJumps + 1
+            self.isFalling = false
+            self:play("jump")
+        end
+    elseif key == "space" then
+        self:play("attack")
     end
 end
 
-function sprite:draw(angle, sx, sy)
-    love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y, angle, sx, sy)
+function sprite:draw()
+    love.graphics.draw(self.frames[self.index].image, self.position.x, self.position.y - self.height, 0, 1,
+        1)
 end
 
 module.new = new
