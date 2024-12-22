@@ -21,7 +21,7 @@ function love.load()
     -- Create obstacles
     Obstacles = {
         { x = 100, y = 220, width = 50, height = 50 },
-        { x = 200, y = 280, width = 50, height = 70 },
+        { x = 200, y = 380, width = 50, height = 70 },
         { x = 300, y = 90,  width = 50, height = 60 }
     }
 
