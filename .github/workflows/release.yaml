@@ -11,21 +11,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Change Directory
-        run: cd src
-
       - name: Create Love File
         run: |
+          cd src
           find . -type f \( -name "*.lua" -o -name "*.png" -o -name "*.mp3" -o -name "*.wav" -o -name "*.ase" \) -print | zip -@ miako.love
 
       - name: Build Web Version
         run: |
           npm install -g love.js
+          cd src
           love.js miako.love web -c -t "Miako"
 
       - name: Zip Web Build
         run: |
-          cd web && zip -r ../web-build.zip .
+          cd src/web
+          zip -r ../../web-build.zip .
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -34,5 +34,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         with:
           files: |
-            miako.love
+            src/miako.love
             web-build.zip
+
