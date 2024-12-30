@@ -13,16 +13,19 @@ function Projectile.new(position, velocity)
         explosionTimer = 0,
         explosionDuration = 1.5, -- Duration of explosion animation in seconds
         width = 20,              -- Collision box width
-        height = 20              -- Collision box height
+        height = 20,             -- Collision box height
+        damage = 10
     }
     return setmetatable(self, Projectile)
 end
 
 function Projectile:checkCollision(obstacle)
-    return self.position.x < obstacle.x + obstacle.width and
-        self.position.x + self.width > obstacle.x and
-        self.position.y < obstacle.y + obstacle.height and
-        self.position.y + self.height > obstacle.y
+    local x = obstacle.position and obstacle.position.x or obstacle.x
+    local y = obstacle.position and obstacle.position.y or obstacle.y
+    return self.position.x < x + obstacle.width and
+        self.position.x + self.width > x and
+        self.position.y < y + obstacle.height and
+        self.position.y + self.height > y
 end
 
 function Projectile:isOutOfBounds(gameWidth, gameHeight)
@@ -48,12 +51,26 @@ function Projectile:update(obstacles, gameWidth, gameHeight, delta)
             end
         end
 
-        -- Change state to explosion if hit obstacle or out of bounds
+        -- Check for collisions with enemies
+        local hitEnemy = false
+        for _, enemy in ipairs(Enemies) do
+            if self:checkCollision(enemy) then
+                hitEnemy = true
+                enemy:takeDamage(self.damage)
+                self.state = "explosion"
+                self.velocity.x = 0
+                self.velocity.y = 0
+                self.sprite:play("explode", false)
+                break
+            end
+        end
+
+        -- Change state to explosion if hit obstacle/enemy or out of bounds
         if hitObstacle or self:isOutOfBounds(gameWidth, gameHeight) then
             self.state = "explosion"
             self.velocity.x = 0
             self.velocity.y = 0
-            self.sprite:play("explode", false) -- Assuming explosion animation exists
+            self.sprite:play("explode", false)
         end
     elseif self.state == "explosion" then
         self.explosionTimer = self.explosionTimer + delta

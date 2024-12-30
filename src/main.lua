@@ -1,4 +1,5 @@
 local Player = require "player"
+local Enemy = require "enemy"
 DEBUG = false
 DebugOptions = {
     showCollisions = true,
@@ -39,11 +40,21 @@ function love.load()
         { x = 350, y = 152.5, width = 15, height = 25 },
     }
 
+    -- place enemies on the obsticles
+    Enemies = {
+        Enemy.new({ x = 150, y = 120 }, { x = 0, y = 0 }),
+        Enemy.new({ x = 250, y = 137.5 }, { x = 0, y = 0 }),
+        Enemy.new({ x = 300, y = 117.5 }, { x = 0, y = 0 })
+    }
+
     player = Player("sprites/player.ase")
     player:play("run")
 end
 
 function love.update(delta)
+    for _, enemy in ipairs(Enemies) do
+        enemy:update(delta)
+    end
     player:update(delta)
 end
 
@@ -74,6 +85,11 @@ function love.draw()
         love.graphics.setColor(0.5, 0.5, 0.5)
         love.graphics.rectangle("fill", obstacle.x, obstacle.y,
             obstacle.width, obstacle.height)
+    end
+
+    -- draw enemies
+    for _, enemy in ipairs(Enemies) do
+        enemy:draw()
     end
 
     -- Reset color and draw player
